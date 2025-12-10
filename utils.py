@@ -11,7 +11,7 @@ def run_ocr(filepath: Path) -> str:
     global pdf_converter
     if pdf_converter is None:
         pdf_converter = DocumentConverter()
-    result = pdf_converter.convert(filepath)
+    result = pdf_converter.convert(filepath, max_num_pages=10)
     outputs_total = result.document.export_to_markdown()
     return outputs_total
 
