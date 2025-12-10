@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "gcc", "libGL", "glib", "zlib"]
-
-[phases.install]
-cmds = ["python3 -m pip install --no-cache-dir -r requirements.txt"]
