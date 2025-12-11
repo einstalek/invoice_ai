@@ -88,6 +88,17 @@ If multiple related entities appear (such as a parent company and a local branch
 associated with the VAT number used on the invoice or the one explicitly labelled as the seller. 
 Footer legal text or corporate registration details should only supplement the chosen supplier, not replace it.
 
+When determining the country group, consider the following split: EE, EU_OTHER, NON_EU.
+
+When determining which type of services was provided, consider the following split: GOODS, SERVICES. "SERVICES" means everything that is not a supply of physical movable goods. If uncertain, choose SERVICES.
+
+Also further classify the supply type into the following categories: SERV_9, SERV_13, SERV_24, SERV_0, SERV_EX.
+- SERV_13: Accommodation or Accommodation with breakfast. Only assign CAT_13 if the invoice explicitly shows hotel/room/booking/accommodation terminology, do NOT guess.
+- SERV_9: books and educational literature, medicinal products, contraceptive preparations, sanitary and toiletry products, press publications. Assign CAT_9 only if the invoice clearly indicates one of these exact product categories, do NOT guess.
+- SERV_0: Domestic 0%-rate supplies, apply only if the invoice explicitly states a valid legal zero-rate basis (e.g. certain services directly connected to international transport). If there is no explicit text explaining the 0% rate, DO NOT assign this category.
+- SERV_EX: health-care services, social welfare services, general education services, universal postal service, insurance services, financial and securities / currency transactions and their mediation, lotteries and gambling, investment gold and some cost-sharing services. Assign only if the invoice explicitly refers to one of these categories, or uses terms such as “VAT exempt”, etc.
+- SERV_24: Default category, for all other services.
+
 Example format:
 { 
   /// Invoice data
@@ -97,24 +108,28 @@ Example format:
   "invoice_total_amounts": "<value>", /// including vats
   "invoice_currency": "<value>",
   "description_keyword": "<value>", ///  e.g., software, hosting, legal, medical, rent, etc, (type of service provided, if can be deduced),
-  "vat_rates": "<value>", /// (0 %, 9 %, 13 %, 24 %), if VAT rate(s) shown,
+  "vat_rates": "<value>", /// (0 %, 9 %, 13 %, 24 %, ...), if VAT rate(s) shown,
+  "supply_type": "<value>",  /// one of: GOODS, SERVICES,
+  "service_category": "<value>", /// one of: SERV_9, SERV_13, SERV_24, SERV_0, SERV_EX
 
   /// Supplier data
   "supplier_info_reasoning": "<value>",
   "supplier_name": "<value>",
   "supplier_address": "<value>",
-  "supplier_country": "<value>",
+  "supplier_country": "<value>",  /// Should be a proper country name
+  "supplier_country_group": "<value>", /// one of: EE, EU_OTHER, NON_EU
   "supplier_vat_id": "<value>",
   "supplier_vat_registration": "<value>",
   "supplier_email": "<value>",
 
   /// Buyer data
-  "buyer_info_reason": "<value>",
+  "buyer_info_reasoning": "<value>",
   "buyer_name": "<value>",
   "buyer_address": "<value>",
-  "buyer_country": "<value>",
+  "buyer_country": "<value>",  /// Should be a proper country name
+  "buyer_country_group": "<value>", /// one of: EE, EU_OTHER, NON_EU
   "buyer_vat_id": "<value>",
   "buyer_vat_registration": "<value>",
-  "buyer_email": "<value>"
+  "buyer_email": "<value>",
 }
 """
