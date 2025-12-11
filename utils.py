@@ -45,6 +45,12 @@ class EUScenario:
     EU_SERV_RC_24 = 'EU_SERV_RC_24'
     EU_FOREIGN_VAT_COST_ONLY = 'EU_FOREIGN_VAT_COST_ONLY'
 
+class NonEUScenario:
+    NON_EU_SERV_RC_24_FULL = 'NON_EU_SERV_RC_24_FULL'
+    NON_EU_SERV_RC_9_FULL = 'NON_EU_SERV_RC_9_FULL'
+    NON_EU_IMPORT_KMD_24 = 'NON_EU_IMPORT_KMD_24'
+    NON_EU_IMPORT_KMD_9 = 'NON_EU_IMPORT_KMD_9'
+
 
 def run_ocr(filepath: Path) -> str:
     global pdf_converter
@@ -148,8 +154,19 @@ def determine_vat_scenarios(response: dict) -> Optional[str]:
                     return EUScenario.EU_SERV_RC_24
         return Scenario.OUT_OF_SCOPE
 
+
     # ==================== NON EU SUPPLIER ====================
     elif supplier_ccode == CountryCode.NON_EU:
+        if supply_type == SupplyType.GOODS:
+            if service_type == ServiceType.SERV_9:
+                return NonEUScenario.NON_EU_IMPORT_KMD_9
+            else:
+                return NonEUScenario.NON_EU_IMPORT_KMD_24
+        elif supply_type == SupplyType.SERVICES:
+            if service_type == ServiceType.SERV_9:
+                return NonEUScenario.NON_EU_SERV_RC_9_FULL
+            else:
+                return NonEUScenario.NON_EU_SERV_RC_24_FULL
         return Scenario.OUT_OF_SCOPE
     else:
         raise ValueError("Unknown country code")
