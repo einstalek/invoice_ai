@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inflow{% endblock %}</title>
+    <script>
+        (() => {
+            try {
+                const stored = localStorage.getItem('invoice_ai_theme_pref');
+                const pref =
+                    stored === 'light' || stored === 'dark' || stored === 'system'
+                        ? stored
+                        : 'system';
+                const isDark =
+                    window.matchMedia &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const resolved = pref === 'system' ? (isDark ? 'dark' : 'light') : pref;
+                document.documentElement.dataset.theme = resolved;
+                document.documentElement.dataset.themePref = pref;
+            } catch (error) {
+                // Ignore storage errors
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles.css' %}?v=20260209-5">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}bg-slate-50 min-h-screen flex flex-col text-slate-800{% endblock %}">
+    {% block header %}
+        {% include "_header.html" %}
+    {% endblock %}
+
+    {% include "components/toasts.html" %}
+
+    {% block content %}{% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
+
+    <script>
+        (() => {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toasts = Array.from(container.querySelectorAll('[data-toast]'));
+            toasts.forEach((toast) => {
+                const dismiss = () => {
+                    toast.classList.add('toast-hide');
+                    setTimeout(() => toast.remove(), 300);
+                };
+                const closeBtn = toast.querySelector('[data-toast-close]');
+                if (closeBtn) closeBtn.addEventListener('click', dismiss);
+                setTimeout(dismiss, 4800);
+            });
+        })();
+    </script>
+</body>
+</html>

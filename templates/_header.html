@@ -1,0 +1,80 @@
+<header class="header-shell px-6 py-4 flex justify-between items-center shrink-0 z-50">
+    <div class="flex items-center gap-3">
+        <div class="brand-lockup">
+            <a href="/" class="brand-title text-2xl sm:text-3xl font-semibold">Inflow</a>
+            {% if header_active_org_name %}
+                <span id="brand-org" class="brand-org">
+                    <span class="brand-org-sep">@</span>
+                    <span id="brand-org-name" class="brand-org-name">{{ header_active_org_name }}</span>
+                </span>
+            {% else %}
+                <span id="brand-org" class="brand-org hidden">
+                    <span class="brand-org-sep">@</span>
+                    <span id="brand-org-name" class="brand-org-name"></span>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="flex flex-col items-end gap-1">
+        <div class="flex items-center gap-2 relative">
+            <a href="/app/" class="nav-link {% if header_active_page == 'extractor' %}nav-link-active{% endif %}">
+                Extractor
+            </a>
+            <a href="/invoices" class="nav-link {% if header_active_page == 'invoices' %}nav-link-active{% endif %}">
+                Invoices
+            </a>
+            <div id="org-menu" class="relative {% if not header_show_org %}hidden{% endif %}">
+                <button id="org-menu-btn" class="btn btn-outline btn-sm max-w-[180px] org-btn">
+                    <span id="org-menu-label" class="truncate block">{{ header_org_name|default:'org' }}</span>
+                </button>
+            </div>
+            <div id="account-menu" class="relative {% if not header_show_account %}hidden{% endif %}">
+                <button id="account-button" class="relative h-9 w-9 rounded-full border border-slate-900 text-white text-xs font-semibold flex items-center justify-center bg-slate-900 hover:bg-slate-800 transition-colors">
+                    <span id="account-initials">{{ header_account_initials }}</span>
+                    <span id="notifications-count" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center px-1">0</span>
+                </button>
+                <div id="account-dropdown" class="hidden absolute right-0 mt-2 w-72 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-[60]">
+                    <div id="account-email" class="px-3 py-2 text-xs text-slate-500 border-b border-slate-200/70">{{ header_account_email }}</div>
+                    <a id="google-connect-account-btn" href="/auth/google" class="hidden block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        Connect Google
+                    </a>
+                    <button id="google-disconnect-btn" class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        Sign out
+                    </button>
+                    <div class="border-t border-slate-200/70">
+                        <div id="notifications-invites-header" class="hidden px-3 py-2 text-xs text-slate-500 border-b border-slate-200/70">Invitations</div>
+                        <div id="notifications-invites" class="hidden p-3 space-y-2 text-sm text-slate-600"></div>
+                        <div id="notifications-approvals-header" class="hidden px-3 py-2 text-xs text-slate-500 border-t border-slate-200/70">Invoices</div>
+                        <div id="notifications-approvals" class="hidden p-3 space-y-2 text-sm text-slate-600">
+                            <div class="text-xs text-slate-500">No pending approvals.</div>
+                        </div>
+                        <div id="notifications-empty" class="hidden px-3 py-3 text-xs text-slate-500">No new notifications.</div>
+                    </div>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-toggle {% if not header_show_account %}hidden{% endif %}" type="button" aria-label="Theme: Light" title="Theme: Light">
+                <span class="sr-only">Toggle theme</span>
+                <svg id="theme-icon-light" viewBox="0 0 24 24" class="theme-icon" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                </svg>
+                <svg id="theme-icon-dark" viewBox="0 0 24 24" class="theme-icon hidden" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5Z"></path>
+                </svg>
+            </button>
+            <div id="login-menu" class="relative {% if not header_show_login %}hidden{% endif %}">
+                <button id="login-menu-btn" class="btn btn-outline btn-sm">
+                    Log in
+                </button>
+                <div id="login-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-[60]">
+                    <a id="google-connect-btn" href="/auth/google" class="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        Continue with Google
+                    </a>
+                    <a id="email-login-btn" href="/auth/login/" class="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        Continue with Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

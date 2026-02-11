@@ -1,0 +1,9 @@
+.env
+oauth_tokens.db
+*.db
+db.*
+*client_secret*.json
+media/
+__pycache__/
+*/__pycache__/
+.cache/

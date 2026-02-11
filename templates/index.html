@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Inflow{% endblock %}
+
+{% block extra_head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://apis.google.com/js/api.js"></script>
+{% endblock %}
+
+{% block body_class %}app-gradient h-screen flex flex-col overflow-hidden text-slate-800 app-shell{% endblock %}
+
+{% block content %}
+    <main class="flex-1 flex overflow-hidden min-h-0 app-main">
+        <div class="flex-1 bg-slate-100/70 relative overflow-auto border-r border-slate-200/70 min-h-0" id="pdf-wrapper">
+            <div class="sticky left-4 top-4 z-20 flex w-fit items-center gap-2 rounded-xl border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-xs text-slate-600 shadow-sm backdrop-blur">
+                <button id="zoom-out-btn" class="btn btn-ghost btn-xs">-</button>
+                <div id="zoom-label" class="min-w-[48px] text-center font-medium">100%</div>
+                <button id="zoom-in-btn" class="btn btn-ghost btn-xs">+</button>
+                <div class="mx-1 h-4 w-px bg-slate-200"></div>
+                <div id="page-counter" class="font-medium">Page 0 / 0</div>
+            </div>
+
+            <div id="drop-zone" class="max-w-md mx-auto mt-20 flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-300 rounded-2xl bg-white/80 hover:bg-white hover:border-blue-400 transition-all cursor-pointer soft-outline">
+                <p class="text-lg font-medium text-slate-600">Drop PDF Invoice here</p>
+                <input type="file" id="file-input" class="hidden" accept="application/pdf">
+            </div>
+
+            <div id="canvas-container" class="hidden flex flex-col items-center gap-4 py-8 min-h-full w-full">
+                <!-- Pages will be injected here by JS -->
+            </div>
+        </div>
+
+        <div id="sidebar-resizer" class="sidebar-resizer flex-none w-2 h-full self-stretch bg-slate-200/40 hover:bg-blue-200/70" title="Resize panel"></div>
+        <div class="w-[450px] min-w-[320px] flex-none panel-glass flex flex-col border-l border-slate-200/70 shadow-xl z-10 min-h-0 app-sidebar" id="sidebar">
+            <div class="p-4 border-b border-slate-200/70 bg-white/70" id="sidebar-top">
+                <div class="flex items-center justify-between">
+                    <h2 class="font-semibold text-slate-700">Extracted Data</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="sidebar-collapse-btn" class="h-8 w-8 flex items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors" title="Collapse details" aria-label="Collapse details" type="button">
+                            <svg id="sidebar-collapse-icon" viewBox="0 0 24 24" class="h-4 w-4 transition-transform" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M6 14l6-6 6 6"></path>
+                            </svg>
+                        </button>
+                        <button id="close-invoice-btn" class="hidden h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors" title="Close">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+                <div id="sidebar-top-content" class="mt-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button id="export-btn" class="btn btn-outline btn-xs action-btn hidden">Export</button>
+                        <button id="cancel-extraction-btn" class="btn btn-outline btn-xs action-btn hidden">Cancel</button>
+                        <button id="submit-btn" class="btn btn-primary btn-xs action-btn hidden">Submit</button>
+                        <button id="delete-submission-btn" class="btn btn-danger btn-xs action-btn hidden">Delete</button>
+                        <div id="approval-actions" class="hidden flex items-center gap-2 flex-wrap">
+                                <button id="reject-btn" class="btn btn-danger btn-xs action-btn">Decline</button>
+                                <button id="request-edit-btn" class="btn btn-warning btn-xs action-btn">Request edit</button>
+                                <button id="approve-btn" class="btn btn-success btn-xs action-btn">Approve</button>
+                            <div class="relative">
+                                <button id="export-menu-btn" class="btn btn-outline btn-xs action-btn">Export</button>
+                                <div id="export-menu" class="hidden absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-[60]">
+                                    <button id="export-google-btn" class="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        <span>Google Sheets</span>
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-600" fill="currentColor" aria-hidden="true">
+                                            <path d="M7 2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
+                                            <path d="M14 2v6h6" fill="#10b981"/>
+                                            <path d="M8 11h8v2H8v-2zm0 4h8v2H8v-2z" fill="#fff"/>
+                                        </svg>
+                                    </button>
+                                    <button id="export-erp-btn" class="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        <span>ERP (coming soon)</span>
+                                        <span class="text-xs text-slate-400">ERP</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="review-progress" class="hidden text-xs text-slate-500"></div>
+                        </div>
+                    </div>
+                    <div id="sheet-status" class="mt-2 text-xs text-slate-500 hidden"></div>
+                    <div id="saving-destination" class="hidden mt-2 meta-item">
+                        <div class="meta-content">
+                            <div class="meta-label">System</div>
+                            <div class="meta-row">
+                                <div id="saving-destination-value" class="meta-value"></div>
+                                <button id="saving-destination-clear" class="meta-clear" type="button" aria-label="Reset system">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="export-status" class="mt-2 text-xs text-slate-500"></div>
+                    <div id="export-locked-hint" class="hidden mt-1 text-[11px] text-slate-400">Export locked until approvals complete.</div>
+                    <div id="submission-meta" class="hidden mt-2 meta-stack"></div>
+                    <div id="reviewer-panel" class="hidden mt-3">
+                        <div class="meta-label">Reviewers</div>
+                        <div id="reviewer-list" class="reviewer-list"></div>
+                        <div id="reviewer-select" class="reviewer-select hidden"></div>
+                        <div id="reviewer-select-status" class="text-xs text-rose-500 mt-1"></div>
+                        <div id="reviewer-add" class="reviewer-add hidden">
+                            <div class="reviewer-add-row">
+                                <select id="reviewer-add-select" class="input-base input-sm"></select>
+                                <button id="reviewer-add-btn" class="btn btn-outline btn-xs">Add reviewer</button>
+                            </div>
+                            <div id="reviewer-add-status" class="text-xs text-rose-500 mt-1"></div>
+                        </div>
+                    </div>
+                    <div id="review-comment" class="hidden mt-2 rounded-lg border border-slate-200/70 bg-white/70 p-2">
+                        <div id="review-comment-title" class="text-[10px] uppercase tracking-widest text-slate-400">Admin note</div>
+                        <div id="review-comment-body" class="mt-1 text-xs text-slate-600 whitespace-pre-wrap"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="json-content" class="flex-1 overflow-y-auto p-2 space-y-2 min-h-0 app-sidebar-scroll">
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 text-sm p-8 text-center">Waiting for document...</div>
+            </div>
+        </div>
+    </main>
+
+    {% if header_is_authenticated %}
+    <script>
+        (() => {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (!params.get('submission_id')) return;
+                const exportStatus = document.getElementById('export-status');
+                const jsonContent = document.getElementById('json-content');
+                if (exportStatus) {
+                    exportStatus.textContent = 'Loading submission...';
+                }
+                if (jsonContent) {
+                    jsonContent.innerHTML = `
+                        <div class="p-8 text-center text-slate-500">
+                            <div class="progress-track h-2 rounded-full overflow-hidden">
+                                <div class="progress-bar h-full rounded-full"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                // Ignore URL parsing errors.
+            }
+        })();
+    </script>
+    {% endif %}
+
+    <div id="org-create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Create organization</h3>
+                <button id="org-create-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div class="space-y-3">
+                <input id="org-create-input" type="text" placeholder="Organization name" class="input-base">
+                <div>
+                    <div class="text-[11px] text-slate-400 mb-1">Invite emails (press Enter or comma to add)</div>
+                    <div id="org-create-email-chips" class="chip-input">
+                        <input id="org-create-email-input" type="text" class="chip-input-field" placeholder="name@company.com">
+                    </div>
+                    <div id="org-create-email-status" class="text-xs text-rose-500 mt-1"></div>
+                </div>
+                <button id="org-create-submit" class="btn btn-primary w-full">Create</button>
+                <div id="org-create-status" class="text-xs text-slate-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="org-select-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Select organization</h3>
+                <button id="org-select-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div class="space-y-3">
+                <select id="org-select-list" class="input-base">
+                    <option value="">No orgs yet</option>
+                </select>
+                <button id="org-select-submit" class="btn btn-primary w-full">Set active</button>
+                <div id="org-select-status" class="text-xs text-slate-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="org-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Organization info</h3>
+                <button id="org-info-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div id="org-info-content" class="space-y-3 text-sm text-slate-600">
+                <div class="text-xs text-slate-400">Loading...</div>
+            </div>
+            <div class="mt-4 space-y-2">
+                <button id="org-info-select" class="btn btn-outline w-full">Select another organization</button>
+                <button id="org-info-create" class="btn btn-outline w-full">Create new organization</button>
+                <button id="org-info-edit" class="btn btn-outline w-full">Edit organization</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="org-edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Manage organization</h3>
+                <button id="org-edit-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600">
+                <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wider">Members</div>
+                    <div id="org-edit-members" class="mt-2 space-y-2"></div>
+                    <div id="org-edit-members-status" class="text-xs text-slate-500 mt-2"></div>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wider">Invite members</div>
+                    <div class="text-[11px] text-slate-400 mb-1">Press Enter or comma to add</div>
+                    <div id="org-edit-email-chips" class="chip-input">
+                        <input id="org-edit-email-input" type="text" class="chip-input-field" placeholder="name@company.com">
+                    </div>
+                    <div id="org-edit-email-status" class="text-xs text-rose-500 mt-1"></div>
+                    <button id="org-edit-invite-submit" class="btn btn-primary w-full mt-3">Send invites</button>
+                    <div id="org-edit-invite-status" class="text-xs text-slate-500 mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="request-edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Request changes</h3>
+                <button id="request-edit-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-600">
+                <div>
+                    <label for="request-edit-input" class="form-label">Comment</label>
+                    <textarea id="request-edit-input" class="input-base input-textarea" placeholder="Describe the changes you need."></textarea>
+                </div>
+                <div id="request-edit-status" class="text-xs text-rose-500"></div>
+                <div class="flex items-center justify-end gap-2">
+                    <button id="request-edit-cancel" class="btn btn-ghost btn-sm">Cancel</button>
+                    <button id="request-edit-send" class="btn btn-warning btn-sm">Send request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ocr-empty-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">No text detected</h3>
+                <button id="ocr-empty-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <p class="text-sm text-slate-600">No text was detected in this PDF. If it is a scanned image, OCR might not be supported yet.</p>
+            <div class="mt-4 flex items-center justify-end">
+                <button id="ocr-empty-ok" class="btn btn-primary btn-sm">OK</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% load static %}
+    <script>
+        window.APP_CONFIG = {
+            googleApiKey: "{{ google_api_key|default:''|escapejs }}",
+            googleClientId: "{{ google_client_id|default:''|escapejs }}",
+            isAuthenticated: {{ header_is_authenticated|yesno:"true,false" }}
+        };
+    </script>
+    <script src="{% static 'header.js' %}?v=20260209-1"></script>
+    <script src="{% static 'app.js' %}?v=20260210-1"></script>
+{% endblock %}

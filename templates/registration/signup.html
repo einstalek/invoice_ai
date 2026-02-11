@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Create account · Inflow{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block body_class %}min-h-screen flex items-center justify-center bg-slate-50 text-slate-800{% endblock %}
+
+{% block content %}
+    <div class="auth-card">
+        <h1 class="brand-title text-2xl font-semibold mb-2">Create account</h1>
+        <p class="text-sm text-slate-500 mb-6">Use an email and password.</p>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="text-sm text-rose-600">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div>
+                <label class="form-label" for="id_email">Email</label>
+                <input type="email" name="email" id="id_email" class="input-base" required>
+                {% if form.email.errors %}
+                    <div class="text-xs text-rose-600 mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div>
+                <label class="form-label" for="id_password1">Password</label>
+                <input type="password" name="password1" id="id_password1" class="input-base" required>
+                {% if form.password1.errors %}
+                    <div class="text-xs text-rose-600 mt-1">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+            <div>
+                <label class="form-label" for="id_password2">Confirm password</label>
+                <input type="password" name="password2" id="id_password2" class="input-base" required>
+                {% if form.password2.errors %}
+                    <div class="text-xs text-rose-600 mt-1">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Create account</button>
+        </form>
+        <div class="mt-4 text-xs text-slate-500">
+            Already have an account? <a href="/auth/login/" class="text-blue-600 hover:underline">Sign in</a>.
+        </div>
+        <div class="mt-2 text-xs text-slate-500">
+            Prefer Google? <a href="/auth/google" class="text-blue-600 hover:underline">Sign in with Google</a>.
+        </div>
+    </div>
+{% endblock %}

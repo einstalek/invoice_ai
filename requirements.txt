@@ -1,5 +1,12 @@
-Flask
 python-dotenv
 replicate
-docling
 gunicorn
+whitenoise
+pymupdf4llm
+gspread
+google-auth
+google-auth-oauthlib
+Django
+djangorestframework
+django-storages
+boto3

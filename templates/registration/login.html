@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · Inflow{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block body_class %}min-h-screen flex items-center justify-center bg-slate-50 text-slate-800{% endblock %}
+
+{% block content %}
+    <div class="auth-card">
+        <h1 class="brand-title text-2xl font-semibold mb-2">Sign in</h1>
+        <p class="text-sm text-slate-500 mb-6">Use your email and password.</p>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="text-sm text-rose-600">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div>
+                <label class="form-label" for="id_username">Email</label>
+                <input type="text" name="username" id="id_username" class="input-base" required>
+            </div>
+            <div>
+                <label class="form-label" for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="input-base" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Sign in</button>
+        </form>
+        <div class="mt-4 text-xs text-slate-500">
+            Don't have an account? <a href="/auth/signup/" class="text-blue-600 hover:underline">Create one</a>.
+        </div>
+        <div class="mt-2 text-xs text-slate-500">
+            Prefer Google? <a href="/auth/google" class="text-blue-600 hover:underline">Sign in with Google</a>.
+        </div>
+    </div>
+{% endblock %}

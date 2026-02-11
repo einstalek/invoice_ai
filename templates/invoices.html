@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Invoices · Inflow{% endblock %}
+
+{% block body_class %}app-gradient min-h-screen flex flex-col text-slate-800{% endblock %}
+
+{% block content %}
+    <main class="flex-1 overflow-hidden px-6 py-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-4">
+                <h2 id="invoices-title" class="text-xl font-semibold text-slate-800">Pending submissions</h2>
+                <p id="invoices-subtitle" class="text-sm text-slate-500">Review incoming invoices and open any submission to edit or approve.</p>
+            </div>
+
+            <div id="invoices-status" class="text-sm text-slate-500 mb-3"></div>
+
+            <div class="card-shell overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="table-base">
+                        <thead class="table-head">
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Sender</th>
+                                <th>Comment</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-table" class="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="invoice-delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-700">Delete submission</h3>
+                <button id="invoice-delete-close" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <p class="text-sm text-slate-600">Delete this submission? This cannot be undone.</p>
+            <div class="mt-4 flex items-center justify-end gap-2">
+                <button id="invoice-delete-cancel" class="btn btn-outline btn-sm">Cancel</button>
+                <button id="invoice-delete-confirm" class="btn btn-danger btn-sm">Delete</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% load static %}
+    <script src="{% static 'header.js' %}?v=20260209-1"></script>
+    <script src="{% static 'invoices.js' %}?v=20260209-1"></script>
+{% endblock %}

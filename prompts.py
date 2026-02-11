@@ -1,5 +1,6 @@
 system_prompt_buyer = """
-You're an assistant whose job is to look at text extracted from an invoice and answer questions about that invoice.
+You're an assistant whose job is to look at text extracted from an invoice and answer questions about that invoice. 
+This information will be used later to decide on vat processing.
 
 When determining the buyer, use the section explicitly labeled as the billing, 
 invoice-to, or commercial address.
@@ -37,32 +38,34 @@ Your response must ALWAYS be valid JSON with specific keys.
 If some field is missing, just leave it empty.
 Return only JSON. No explanations.
 Never invent or infer information not present in the text.
+For each non-reasoning field, return an object with "value" and "confidence".
+Confidence must be one of: "definitely wrong", "low confidence", "medium confidence", "strong confidence".
+If the field is missing or empty, set "value" to "" and "confidence" to "low confidence".
+Use "definitely wrong" only if the text explicitly contradicts the field value.
 
 Example format:
 { 
   /// Invoice data
-  "invoice_date": "<value>",
-  "invoice_number": "<value>",
-  "invoice_total_amounts": "<value>", /// including vats
-  "invoice_currency": "<value>",
-  "description_keyword": "<value>", ///  e.g., software, hosting, legal, medical, rent, etc, (type of service provided, if can be deduced),
-  "vat_rates": "<value>", /// (0 %, 9 %, 13 %, 24 %), if VAT rate(s) shown
+  "invoice_date": {"value": "<value>", "confidence": "strong confidence"},
+  "invoice_number": {"value": "<value>", "confidence": "strong confidence"},
+  "invoice_total_amounts": {"value": "<value>", "confidence": "medium confidence"}, /// numeric amount including VAT (no currency symbols)
+  "invoice_currency": {"value": "<value>", "confidence": "strong confidence"},
+  "description_keyword": {"value": "<value>", "confidence": "medium confidence"}, ///  e.g., software, hosting, legal, medical, rent, etc, (type of service provided, if can be deduced),
+  "vat_rates": {"value": "<value>", "confidence": "medium confidence"}, /// (0, 9, 13, 24), if VAT rate(s) shown, no percent sign
 
   /// Supplier data
-  "supplier_name": "<value>",
-  "supplier_address": "<value>",
-  "supplier_country": "<value>",
-  "supplier_vat_id": "<value>",
-  "supplier_vat_registration": "<value>",
-  "supplier_email": "<value>",
+  "supplier_name": {"value": "<value>", "confidence": "strong confidence"},
+  "supplier_address": {"value": "<value>", "confidence": "medium confidence"},
+  "supplier_country": {"value": "<value>", "confidence": "medium confidence"},
+  "supplier_vat_id": {"value": "<value>", "confidence": "medium confidence"},
+  "supplier_email": {"value": "<value>", "confidence": "medium confidence"},
 
   /// Buyer data
-  "buyer_name": "<value>",
-  "buyer_address": "<value>",
-  "buyer_country": "<value>",
-  "buyer_vat_id": "<value>",
-  "buyer_vat_registration": "<value>",
-  "buyer_email": "<value>",
+  "buyer_name": {"value": "<value>", "confidence": "strong confidence"},
+  "buyer_address": {"value": "<value>", "confidence": "medium confidence"},
+  "buyer_country": {"value": "<value>", "confidence": "medium confidence"},
+  "buyer_vat_id": {"value": "<value>", "confidence": "medium confidence"},
+  "buyer_email": {"value": "<value>", "confidence": "medium confidence"},
 }
 """
 
@@ -73,10 +76,15 @@ Your response must ALWAYS be valid JSON with specific keys.
 If some field is missing, just leave it empty.
 Return only JSON. No explanations.
 Never invent or infer information not present in the text.
+For each field, return an object with "value" and "confidence".
+Confidence must be one of: "definitely wrong", "low confidence", "medium confidence", "strong confidence".
+If the field is missing or empty, set "value" to "" and "confidence" to "low confidence".
+Use "definitely wrong" only if the text explicitly contradicts the field value.
 
 When determining the buyer, use the section explicitly labeled as the billing, 
 invoice-to, or commercial address.
 This may appear under labels such as “Billing Address”, “Invoice To”, “Sold To”, or their language equivalents.
+Normally, the buyer is a legal entity with a business name ending with "OÜ", "FIE", "AS", or something of this sort, as opposed of a person's name.
 
 Individual placing the order and the company on behalf of which they're placing the order might be mentioned in different parts of the invoice.
 Pay attention to repeating addresses, you need to be able to match them.
@@ -91,6 +99,7 @@ Footer legal text or corporate registration details should only supplement the c
 When determining the country group, consider the following split: EE, EU_OTHER, NON_EU.
 
 When determining which type of services was provided, consider the following split: GOODS, SERVICES. "SERVICES" means everything that is not a supply of physical movable goods. If uncertain, choose SERVICES.
+For numeric fields like invoice_total_amounts, return only numbers (no currency symbols or commas). VAT rates must be numbers without percent signs.
 
 Also further classify the supply type into the following categories: SERV_9, SERV_13, SERV_24, SERV_0, SERV_EX.
 - SERV_13: Accommodation or Accommodation with breakfast. Only assign CAT_13 if the invoice explicitly shows hotel/room/booking/accommodation terminology, do NOT guess.
@@ -103,33 +112,31 @@ Example format:
 { 
   /// Invoice data
   "general_info_reasoning": "<value>",
-  "invoice_date": "<value>", /// When the invoice was created
-  "invoice_number": "<value>", /// A unique ID for tracking each bill 
-  "invoice_total_amounts": "<value>", /// including vats
-  "invoice_currency": "<value>",
-  "description_keyword": "<value>", ///  e.g., software, hosting, legal, medical, rent, etc, (type of service provided, if can be deduced),
-  "vat_rates": "<value>", /// (0 %, 9 %, 13 %, 24 %, ...), if VAT rate(s) shown,
-  "supply_type": "<value>",  /// one of: GOODS, SERVICES,
-  "service_category": "<value>", /// one of: SERV_9, SERV_13, SERV_24, SERV_0, SERV_EX
+  "invoice_date": {"value": "<value>", "confidence": "strong confidence"}, /// When the invoice was created, in "dd.mm.yyyy" format
+  "invoice_number": {"value": "<value>", "confidence": "strong confidence"}, /// A unique ID for tracking each bill 
+  "invoice_total_amounts": {"value": "<value>", "confidence": "medium confidence"}, /// numeric amount including VAT (no currency symbols)
+  "invoice_currency": {"value": "<value>", "confidence": "strong confidence"},
+  "description_keyword": {"value": "<value>", "confidence": "medium confidence"}, ///  e.g., software, hosting, legal, medical, rent, etc, (type of service provided, if can be deduced),
+  "vat_rates": {"value": "<value>", "confidence": "medium confidence"}, /// (0, 9, 13, 24, ...), if VAT rate(s) shown, no percent sign
+  "supply_type": {"value": "<value>", "confidence": "medium confidence"},  /// one of: GOODS, SERVICES,
+  "service_category": {"value": "<value>", "confidence": "medium confidence"}, /// one of: SERV_9, SERV_13, SERV_24, SERV_0, SERV_EX
 
   /// Supplier data
   "supplier_info_reasoning": "<value>",
-  "supplier_name": "<value>",
-  "supplier_address": "<value>",
-  "supplier_country": "<value>",  /// Should be a proper country name
-  "supplier_country_group": "<value>", /// one of: EE, EU_OTHER, NON_EU
-  "supplier_vat_id": "<value>",
-  "supplier_vat_registration": "<value>",
-  "supplier_email": "<value>",
+  "supplier_name": {"value": "<value>", "confidence": "strong confidence"},
+  "supplier_address": {"value": "<value>", "confidence": "medium confidence"},
+  "supplier_country": {"value": "<value>", "confidence": "medium confidence"},  /// Should be a proper country name
+  "supplier_country_group": {"value": "<value>", "confidence": "medium confidence"}, /// one of: EE, EU_OTHER, NON_EU
+  "supplier_vat_id": {"value": "<value>", "confidence": "medium confidence"},
+  "supplier_email": {"value": "<value>", "confidence": "medium confidence"},
 
   /// Buyer data
   "buyer_info_reasoning": "<value>",
-  "buyer_name": "<value>",
-  "buyer_address": "<value>",
-  "buyer_country": "<value>",  /// Should be a proper country name
-  "buyer_country_group": "<value>", /// one of: EE, EU_OTHER, NON_EU
-  "buyer_vat_id": "<value>",
-  "buyer_vat_registration": "<value>",
-  "buyer_email": "<value>",
+  "buyer_name": {"value": "<value>", "confidence": "strong confidence"},
+  "buyer_address": {"value": "<value>", "confidence": "medium confidence"},
+  "buyer_country": {"value": "<value>", "confidence": "medium confidence"},  /// Should be a proper country name
+  "buyer_country_group": {"value": "<value>", "confidence": "medium confidence"}, /// one of: EE, EU_OTHER, NON_EU
+  "buyer_vat_id": {"value": "<value>", "confidence": "medium confidence"},
+  "buyer_email": {"value": "<value>", "confidence": "medium confidence"},
 }
 """
