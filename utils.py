@@ -67,7 +67,8 @@ def llm_request(prompt, request_id: Optional[str] = None):
     input = {"prompt": system_prompt_parse_w_reasoning + "\n" + prompt}
 
     prediction = replicate.predictions.create(
-        # "anthropic/claude-3.7-sonnet",  ## stronger reasoning, higher costs
+        # model="anthropic/claude-3.7-sonnet",  ## stronger reasoning, higher costs
+        # model="meta/meta-llama-3-8b-instruct",
         model="qwen/qwen3-235b-a22b-instruct-2507",
         input=input,
     )

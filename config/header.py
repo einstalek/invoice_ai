@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 
 from organizations.models import OrganizationMembership
-
+from django.conf import settings
 
 def _get_initials(given_name: str, family_name: str, full_name: str, email: str) -> str:
     if given_name and family_name:
@@ -42,7 +42,7 @@ def build_header_context(request: HttpRequest, active_page: str) -> Dict[str, Op
 
     google_connected = False
     if is_authenticated and hasattr(user, "google_credential"):
-        google_connected = bool(user.google_credential.refresh_token)
+        google_connected = bool(user.google_credential.refresh_token) # type: ignore
 
     first_name = user.first_name if is_authenticated else ""
     last_name = user.last_name if is_authenticated else ""
