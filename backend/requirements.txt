@@ -1,0 +1,35 @@
+# Core
+Django>=5.2,<5.3
+djangorestframework>=3.15,<4.0
+django-filter>=24.0,<25.0
+django-cors-headers>=4.4,<5.0
+
+# Auth
+djangorestframework-simplejwt>=5.3,<6.0
+django-allauth[socialaccount]>=65.0,<66.0
+dj-rest-auth[with_social]>=7.0,<8.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Async tasks
+celery>=5.4,<6.0
+redis>=5.0,<6.0
+
+# PDF processing
+pdfplumber>=0.11,<1.0
+
+# File storage
+django-storages[s3]>=1.14,<2.0
+
+# Google APIs (ERP export)
+google-api-python-client>=2.140,<3.0
+google-auth>=2.30,<3.0
+gspread>=6.0,<7.0
+
+# LLM
+replicate>=0.34,<1.0
+
+# Dev utilities
+django-extensions>=3.2,<4.0
+python-dotenv>=1.0,<2.0
